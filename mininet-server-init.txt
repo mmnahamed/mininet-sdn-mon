@@ -1,0 +1,79 @@
+username : test
+password : test
+
+sudo apt update
+sudo apt install mininet net-tools xterm -y
+
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt update
+sudo apt install python3.9 python3.9-distutils python3.9-venv python3-pip -y
+
+-------------------------------------------------------------------
+
+python3.9 -m venv ~/ryu-env
+source ~/ryu-env/bin/activate
+pip install --upgrade pip
+
+pip install "setuptools<60.0.0" wheel
+
+pip install eventlet==0.30.2 Werkzeug==2.0.3 gunicorn==20.1.0 oslo.config==6.11.2 oslo.i18n==3.24.0 routes webob ovs netaddr msgpack tinyrpc
+
+pip install ryu --no-build-isolation
+
+ryu-manager ryu.app.simple_switch_13 ryu.app.ofctl_rest
+
+which ryu-manager
+
+--------------------------------------------
+
+sudo systemctl start openvswitch-switch
+sudo systemctl enable openvswitch-switch
+sudo ovs-vsctl show
+
+----------------------------------------------
+
+ls /etc/netplan
+sudo cat /etc/netplan/50-cloud-init.yaml
+
+network:
+  ethernets:
+    ens33: # host-only 
+      addresses:
+        - 192.168.233.141/24
+    ens34: # NAT 
+      dhcp4: true
+  version: 2
+
+sudo netplan apply
+sudo reboot
+
+-------------------------------------
+Terminal 1: The Control Plane (Ryu)----------------
+
+source ~/ryu-env/bin/activate
+ryu-manager ryu.app.simple_switch_13 ryu.app.ofctl_rest ryu.app.rest_topology
+
+------------------------------------------------
+Terminal 2: The Data Plane (Mininet)----------------
+
+sudo mn --controller=remote,ip=127.0.0.1,port=6653 --topo=tree,depth=2 --mac --switch=ovsk
+
+------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

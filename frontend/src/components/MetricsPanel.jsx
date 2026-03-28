@@ -22,13 +22,17 @@ const PortCard = ({ port }) => {
     const hasErrors = port.rx_errors > 0 || port.tx_errors > 0 || port.rx_dropped > 0 || port.tx_dropped > 0;
 
     return (
-        <div className={`bg-gray-900/60 rounded-xl p-4 border border-gray-800 hover:border-blue-500/50 transition-all group shrink-0 ${hasErrors ? 'border-red-500/30 bg-red-500/5' : ''}`}>
+        <div className={`bg-gray-900/60 rounded-xl p-4 border border-gray-800 hover:border-blue-500/50 transition-all group shrink-0 
+            ${hasErrors ? 'border-red-500/50 bg-red-500/10 animate-pulse-red' : ''}`}>
             <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                     <Database className="w-3 h-3 text-blue-400" /> {portName}
                 </span>
                 {hasErrors && (
-                    <span className="flex items-center gap-1 text-[10px] text-red-400 font-bold animate-pulse bg-red-400/10 px-2 py-0.5 rounded-full uppercase">
+                    <span
+                        className="flex items-center gap-1 text-[10px] text-red-400 font-bold animate-pulse bg-red-400/10 px-2 py-0.5 rounded-full uppercase cursor-help"
+                        title={`Errors Detected:\nRX Errors: ${port.rx_errors || 0}\nTX Errors: ${port.tx_errors || 0}\nRX Dropped: ${port.rx_dropped || 0}\nTX Dropped: ${port.tx_dropped || 0}`}
+                    >
                         <AlertTriangle className="w-3 h-3" /> Errors Detected
                     </span>
                 )}

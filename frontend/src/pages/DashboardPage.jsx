@@ -32,8 +32,8 @@ const COLOR = {
 };
 
 // ── Stat card ──────────────────────────────────────────────────────────────────
-const StatCard = ({ icon: Icon, label, value, sub, color = 'blue' }) => (
-    <div className={`rounded-lg border px-3 py-2.5 flex items-center gap-3 ${COLOR[color]}`}>
+const StatCard = ({ icon: Icon, label, value, sub, color = 'blue', animate }) => (
+    <div className={`rounded-lg border px-3 py-2.5 flex items-center gap-3 transition-all ${COLOR[color]} ${animate ? 'animate-pulse-red' : ''}`}>
         <div className="p-1.5 rounded-md bg-black/20 shrink-0">
             <Icon className="w-4 h-4" />
         </div>
@@ -82,11 +82,16 @@ const SectionHeader = ({ icon: Icon, title, color = 'text-blue-400', right }) =>
 const PortPill = ({ port, dpid }) => {
     const rxMbps = (port.rx_bps / 1e6).toFixed(2);
     const txMbps = (port.tx_bps / 1e6).toFixed(2);
+    const rxErr = parseFloat(port.rx_errors || 0) + parseFloat(port.rx_dropped || 0);
+    const txErr = parseFloat(port.tx_errors || 0) + parseFloat(port.tx_dropped || 0);
+    const hasError = rxErr > 0 || txErr > 0;
     const hasActivity = port.rx_bps > 1000 || port.tx_bps > 1000;
 
     return (
         <div className={`flex flex-col gap-1 p-2 rounded-lg border transition-all hover:scale-[1.02] cursor-default
-            ${hasActivity ? 'bg-blue-500/10 border-blue-500/30' : 'bg-gray-800/40 border-gray-700/50 opacity-60'}`}>
+            ${hasError ? 'border-rose-500/50 bg-rose-500/10 animate-pulse-red' :
+                hasActivity ? 'bg-blue-500/10 border-blue-500/30' :
+                    'bg-gray-800/40 border-gray-700/50 opacity-60'}`}>
             <div className="flex items-center justify-between">
                 <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">P{port.port_no}</span>
                 <div className={`w-1.5 h-1.5 rounded-full ${hasActivity ? 'bg-blue-400 animate-pulse' : 'bg-gray-600'}`} />
@@ -349,7 +354,8 @@ export default function DashboardPage({ metrics, nodes }) {
                             <StatCard icon={Link2} label="Ports" value={portCount} sub="Excluding LOCAL" color="emerald" />
                             <StatCard icon={Activity} label="Total RX" value={fmtBytes(totalRx)} sub={fmtBps(totalRxBps)} color="violet" />
                             <StatCard icon={Activity} label="Total TX" value={fmtBytes(totalTx)} sub={fmtBps(totalTxBps)} color="amber" />
-                            <StatCard icon={AlertCircle} label="Error Ports" value={errPorts} sub="Ports with errors" color={errPorts > 0 ? 'rose' : 'emerald'} />
+                            <StatCard icon={AlertCircle} label="Error Ports" value={errPorts} sub="Ports with errors"
+                                color={errPorts > 0 ? 'rose' : 'emerald'} animate={errPorts > 0} />
                             <StatCard icon={Database} label="Flows" value={ctrlData?.recent?.at(-1)?.flows_installed ?? '—'}
                                 sub="Installed by controller" color="sky" />
                         </div>

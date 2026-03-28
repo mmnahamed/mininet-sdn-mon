@@ -128,8 +128,8 @@ def create_topology():
     net.addLink(s1, s3, bw=1000, delay="1ms", loss=0)
 
     # ── Link: Cross-aggregation s2 ↔ s3  (multi-path) ────────────────────────
-    info("*** Wiring cross-agg link s2 ↔ s3 (multi-path)\n")
-    net.addLink(s2, s3, bw=100, delay="1ms", loss=0)
+    # info("*** Wiring cross-agg link s2 ↔ s3 (multi-path)\n")
+    # net.addLink(s2, s3, bw=100, delay="1ms", loss=0)
 
     # ── Links: Aggregation ↔ Leaf (100 Mbps) ─────────────────────────────────
     info("*** Wiring aggregation ↔ leaf\n")

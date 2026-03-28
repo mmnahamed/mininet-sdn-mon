@@ -359,4 +359,18 @@ def run_all():
 
 
 if __name__ == "__main__":
-    run_all()
+    import sys
+    setLogLevel("info")
+    if len(sys.argv) > 1:
+        arg = sys.argv[1].lower()
+        summary = {"start": datetime.utcnow().isoformat(), "scenarios": {}}
+        if arg == "1": scenario_1_baseline()
+        elif arg == "2": scenario_2_heavy_traffic()
+        elif arg == "3": scenario_3_scalability()
+        elif arg == "4": scenario_4_multipath()
+        elif arg == "5": scenario_5_link_failure()
+        else:
+            print(f"Unknown scenario: {arg}")
+            sys.exit(1)
+    else:
+        run_all()

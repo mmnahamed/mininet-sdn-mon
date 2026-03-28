@@ -188,6 +188,23 @@ export default function DashboardPage({ metrics, nodes }) {
     const [ctrlData, setCtrlData] = useState(null);
     const [scnData, setScnData] = useState(null);
     const [loading, setLoading] = useState({});
+    const [executing, setExecuting] = useState(null);
+
+    const handleRunExperiment = async (id) => {
+        setExecuting(id);
+        try {
+            const res = await fetch(`${API}/experiments/run?scenario=${id}`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                // Scenario started in background
+                setTimeout(fetchExtra, 2000);
+            }
+        } catch (err) {
+            console.error("Experiment failed:", err);
+        } finally {
+            setExecuting(null);
+        }
+    };
 
     const fetchExtra = async () => {
         try {
@@ -403,16 +420,53 @@ export default function DashboardPage({ metrics, nodes }) {
 
                 {/* ── EXPERIMENTS tab ───────────────────────────────────── */}
                 {tab === 'scenarios' && (
-                    <div className="space-y-4">
-                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 text-[11px] text-amber-300">
-                            Run <code className="font-mono bg-black/30 px-1 rounded">sudo python3 experiment_runner.py</code> on
-                            the Mininet host to populate these tables. Results auto-refresh every 10s.
+                    <div className="space-y-6">
+                        <SectionHeader icon={Zap} title="Research Scenario Gallery" color="text-amber-400" />
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {[
+                                { id: '1', title: 'Baseline Performance', desc: 'Intra-leaf (h1↔h2) throughput, latency, and jitter.', color: 'blue' },
+                                { id: '2', title: 'Heavy Traffic Load', desc: 'Stress test via 4 parallel cross-leaf TCP streams.', color: 'rose' },
+                                { id: '3', title: 'Topology Scalability', desc: 'Sequential ping discovery h1 → h2..h8.', color: 'emerald' },
+                                { id: '4', title: 'Multi-Path Routing', desc: 'East-West (h1↔h5) performance across aggregation.', color: 'violet' },
+                                { id: '5', title: 'Link Failure Recovery', desc: 'Rerouting latency detection during s1↔s2 outage.', color: 'amber' },
+                                { id: 'all', title: 'Full Suite', desc: 'Execute all 5 scenarios sequentially (long duration).', color: 'sky' },
+                            ].map((s) => (
+                                <div key={s.id} className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 flex flex-col justify-between hover:border-gray-700 transition-colors group">
+                                    <div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest bg-black/40 border border-gray-700 ${COLOR[s.color]}`}>
+                                                Scenario {s.id}
+                                            </span>
+                                            {executing === s.id && <RefreshCw className="w-3 h-3 text-blue-400 animate-spin" />}
+                                        </div>
+                                        <h4 className="text-sm font-bold text-white mb-1 group-hover:text-blue-300 transition-colors">{s.title}</h4>
+                                        <p className="text-[11px] text-gray-500 leading-relaxed mb-4">{s.desc}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleRunExperiment(s.id)}
+                                        disabled={!!executing}
+                                        className={`w-full py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2
+                                            ${executing === s.id
+                                                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                                : 'bg-gray-800 hover:bg-blue-600 text-gray-300 hover:text-white border border-gray-700 hover:border-blue-500'}`}>
+                                        {executing === s.id ? 'Executing...' : 'Run Scenario'}
+                                        {!executing && <Zap className="w-3 h-3 text-amber-400" />}
+                                    </button>
+                                </div>
+                            ))}
                         </div>
-                        <ScenarioTable title="Scenario 1 – Baseline" rows={scnData?.baseline} columns={baselineCols} />
-                        <ScenarioTable title="Scenario 2 – Heavy Traffic" rows={scnData?.heavy} columns={heavyCols} />
-                        <ScenarioTable title="Scenario 3 – Scalability" rows={scnData?.scalability} columns={scalabilityCols} />
-                        <ScenarioTable title="Scenario 4 – Multi-Path" rows={scnData?.multipath} columns={multipathCols} />
-                        <ScenarioTable title="Scenario 5 – Link Failure" rows={scnData?.link_failure} columns={failureCols} />
+
+                        <div className="pt-4 border-t border-gray-800">
+                            <SectionHeader icon={BarChart2} title="Experiment Results Cache" color="text-sky-400" />
+                            <div className="space-y-4">
+                                <ScenarioTable title="Scenario 1 – Baseline" rows={scnData?.baseline} columns={baselineCols} />
+                                <ScenarioTable title="Scenario 2 – Heavy Traffic" rows={scnData?.heavy} columns={heavyCols} />
+                                <ScenarioTable title="Scenario 3 – Scalability" rows={scnData?.scalability} columns={scalabilityCols} />
+                                <ScenarioTable title="Scenario 4 – Multi-Path" rows={scnData?.multipath} columns={multipathCols} />
+                                <ScenarioTable title="Scenario 5 – Link Failure" rows={scnData?.link_failure} columns={failureCols} />
+                            </div>
+                        </div>
                     </div>
                 )}
 

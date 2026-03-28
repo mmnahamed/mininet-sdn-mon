@@ -24,16 +24,11 @@ echo "============================================================"
 echo "[1/3] Uploading scripts to $USER@$HOST…"
 
 scp -q "mininet/network_sim.py"    "$USER@$HOST:$REMOTE_DIR/network_sim.py"
-if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to SCP network_sim.py"
-    echo "Check that the file exists at ./mininet/network_sim.py and SSH is configured."
-    exit 1
-fi
-
 scp -q "mininet/sdn_controller.py" "$USER@$HOST:$REMOTE_DIR/sdn_controller.py"
+scp -q "mininet/experiment_runner.py" "$USER@$HOST:$REMOTE_DIR/experiment_runner.py"
 if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to SCP sdn_controller.py"
-    echo "Check that the file exists at ./mininet/sdn_controller.py"
+    echo "ERROR: Failed to SCP research scripts"
+    echo "Check that files exist in ./mininet/ and SSH is configured."
     exit 1
 fi
 

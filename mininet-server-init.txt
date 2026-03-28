@@ -1,3 +1,8 @@
+install ubuntu server 22.04 LTS
+RAM : 4GB
+CPU : 2 cores
+Storage : 20GB
+
 username : test
 password : test
 

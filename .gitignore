@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+*.log
+
+# Node / React (Frontend)
+node_modules/
+dist/
+dist-ssr/
+*.local
+.eslintcache
+
+# Logs and transient files
+nohup.out
+backend.log
+sdn_payload.tar.gz
+
+# System
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo

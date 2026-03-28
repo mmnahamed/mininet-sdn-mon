@@ -69,11 +69,51 @@ const MiniBar = ({ data = [], label = '', color = '#60a5fa', unit = '' }) => {
 };
 
 // ── Section header ─────────────────────────────────────────────────────────────
-const SectionHeader = ({ icon: Icon, title, color = 'text-blue-400' }) => (
-    <h3 className={`text-xs font-semibold text-gray-400 mb-2 flex items-center gap-1.5 uppercase tracking-wider`}>
-        <Icon className={`w-3.5 h-3.5 ${color}`} /> {title}
-    </h3>
+const SectionHeader = ({ icon: Icon, title, color = 'text-blue-400', right }) => (
+    <div className="flex items-center justify-between mb-2">
+        <h3 className={`text-xs font-semibold text-gray-400 flex items-center gap-1.5 uppercase tracking-wider`}>
+            <Icon className={`w-3.5 h-3.5 ${color}`} /> {title}
+        </h3>
+        {right}
+    </div>
 );
+
+// ── Port Grid Item ─────────────────────────────────────────────────────────────
+const PortPill = ({ port, dpid }) => {
+    const rxMbps = (port.rx_bps / 1e6).toFixed(2);
+    const txMbps = (port.tx_bps / 1e6).toFixed(2);
+    const hasActivity = port.rx_bps > 1000 || port.tx_bps > 1000;
+
+    return (
+        <div className={`flex flex-col gap-1 p-2 rounded-lg border transition-all hover:scale-[1.02] cursor-default
+            ${hasActivity ? 'bg-blue-500/10 border-blue-500/30' : 'bg-gray-800/40 border-gray-700/50 opacity-60'}`}>
+            <div className="flex items-center justify-between">
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">P{port.port_no}</span>
+                <div className={`w-1.5 h-1.5 rounded-full ${hasActivity ? 'bg-blue-400 animate-pulse' : 'bg-gray-600'}`} />
+            </div>
+
+            <div className="grid grid-cols-1 gap-0.5 font-mono leading-none">
+                <div className="flex justify-between items-baseline gap-2">
+                    <span className="text-[8px] text-gray-500 uppercase">RX</span>
+                    <span className={`text-[10px] font-bold ${port.rx_bps > 0 ? 'text-emerald-400' : 'text-gray-600'}`}>
+                        {rxMbps} <span className="text-[7px] font-normal">M</span>
+                    </span>
+                </div>
+                <div className="flex justify-between items-baseline gap-2">
+                    <span className="text-[8px] text-gray-500 uppercase">TX</span>
+                    <span className={`text-[10px] font-bold ${port.tx_bps > 0 ? 'text-sky-400' : 'text-gray-600'}`}>
+                        {txMbps} <span className="text-[7px] font-normal">M</span>
+                    </span>
+                </div>
+            </div>
+
+            <div className="mt-1 pt-1 border-t border-gray-700/50 flex justify-between items-center gap-1.5">
+                <span className="text-[9px] font-bold text-amber-500/80">{port.latency?.toFixed(1) || '0.0'}<span className="text-[7px] opacity-60 ml-0.5">ms</span></span>
+                <span className="text-[9px] font-bold text-violet-400/80">{port.jitter?.toFixed(2) || '0.00'}<span className="text-[7px] opacity-60 ml-0.5">jit</span></span>
+            </div>
+        </div>
+    );
+};
 
 // ── Flow stats panel ───────────────────────────────────────────────────────────
 const FlowStatsPanel = ({ flowData }) => {
@@ -227,7 +267,8 @@ export default function DashboardPage({ metrics, nodes }) {
 
     // Aggregates for Overview
     const switchCount = nodes.filter(n => n.type === 'switch').length;
-    const allPorts = Object.values(metrics).flat().filter(p => p.port_no !== 4294967294);
+    const switchData = metrics.switches || {};
+    const allPorts = Object.values(switchData).flat();
     const portCount = allPorts.length;
     const totalRx = allPorts.reduce((a, p) => a + (p.rx_bytes || 0), 0);
     const totalTx = allPorts.reduce((a, p) => a + (p.tx_bytes || 0), 0);
@@ -313,27 +354,55 @@ export default function DashboardPage({ metrics, nodes }) {
                                 sub="Installed by controller" color="sky" />
                         </div>
 
-                        {/* Topology info */}
+                        {/* Live Port Status Grid */}
                         <div className="bg-gray-900/40 rounded-xl border border-gray-800 p-4">
-                            <SectionHeader icon={Shield} title="Hybrid Topology Structure" color="text-blue-400" />
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-                                {[
-                                    { role: 'Core Spine', sw: 's1', desc: '1000 Mbps uplinks' },
-                                    { role: 'Aggregation', sw: 's2, s3', desc: 'Cross-link + dual-spine' },
-                                    { role: 'Leaf', sw: 's4–s7', desc: '100 Mbps to hosts' },
-                                    { role: 'Hosts', sw: 'h1–h8', desc: '10 Mbps edges' },
-                                ].map(({ role, sw, desc }) => (
-                                    <div key={role} className="bg-black/30 rounded-lg p-2.5 border border-gray-800">
-                                        <p className="text-blue-400 font-bold">{role}</p>
-                                        <p className="text-gray-300 font-mono">{sw}</p>
-                                        <p className="text-gray-600">{desc}</p>
+                            <SectionHeader
+                                icon={Database}
+                                title="Live Port Matrix & Link Quality"
+                                color="text-emerald-400"
+                                right={<span className="text-[10px] text-gray-600 font-mono">Real-time Telemetry (ms/jitter/Mbps)</span>}
+                            />
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {nodes.filter(n => n.type === 'switch').map(node => (
+                                    <div key={node.dpid} className="space-y-2">
+                                        <div className="flex items-center gap-2 px-1">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                            <span className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">{node.name}</span>
+                                            <span className="text-[9px] text-gray-600 font-mono ml-auto">DPID {node.dpid}</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                            {(switchData[node.dpid] || []).map((port, idx) => (
+                                                <PortPill key={idx} port={port} dpid={node.dpid} />
+                                            ))}
+                                            {!(switchData[node.dpid]?.length > 0) && (
+                                                <div className="col-span-full border border-dashed border-gray-800 rounded-lg py-4 text-center text-gray-700 text-[10px]">
+                                                    Awaiting Port Handshake...
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
-                            <div className="mt-3 text-[10px] text-gray-500 leading-relaxed">
-                                Multi-path: <span className="text-gray-400">s2 ↔ s3 cross-link</span> enables ECMP.
-                                WAN: <span className="text-gray-400">h_ext → r1 → s1</span> (20ms, 0.5% loss).
-                                Link failure recovery scenario uses the cross-agg path when s1↔s2 fails.
+
+                            <div className="mt-4 pt-3 border-t border-gray-800 flex items-center justify-between">
+                                <div className="flex gap-4 text-[10px]">
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-2 h-2 rounded bg-emerald-500/20 border border-emerald-500/40" />
+                                        <span className="text-gray-500">RX Traffic</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-2 h-2 rounded bg-sky-500/20 border border-sky-500/40" />
+                                        <span className="text-gray-500">TX Traffic</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-amber-500/80 font-bold uppercase tracking-tighter">Latency</span>
+                                        <span className="text-violet-400/80 font-bold uppercase tracking-tighter">Jitter</span>
+                                    </div>
+                                </div>
+                                <div className="text-[10px] text-gray-600">
+                                    Source: background h1-h6 internal pings & h1-hext WAN probes
+                                </div>
                             </div>
                         </div>
                     </>

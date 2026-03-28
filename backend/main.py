@@ -267,7 +267,10 @@ async def get_network_metrics():
                 return_exceptions=True,
             )
 
-            result = {}
+            result = {
+                "switches": {},
+                "latency_stats": _latency_cache
+            }
             for i, dpid in enumerate(dpids):
                 res = stats_resps[i]
                 if isinstance(res, Exception) or res.status_code != 200:
@@ -276,12 +279,20 @@ async def get_network_metrics():
                 calc  = []
                 for p in ports:
                     p_no     = str(p["port_no"])
-                    rx, tx   = p["rx_bytes"], p["tx_bytes"]
+                    # Skip LOCAL port
+                    if p_no == "4294967294" or p_no == "LOCAL": continue
+
+                    rx, tx   = p.get("rx_bytes", 0), p.get("tx_bytes", 0)
                     prev_sw  = _last_metrics_state["data"].get(dpid, {})
                     prev_p   = prev_sw.get(p_no, {"rx": rx, "tx": tx})
                     rx_bps   = max(0, (rx - prev_p["rx"]) * 8 / dt) if dt > 0 else 0
                     tx_bps   = max(0, (tx - prev_p["tx"]) * 8 / dt) if dt > 0 else 0
                     _last_metrics_state["data"].setdefault(dpid, {})[p_no] = {"rx": rx, "tx": tx}
+
+                    # Determine which latency bucket to use
+                    # s1 (dpid 1), port 3 is the uplink to r1/WAN
+                    is_wan = (dpid == "1" and p_no == "3")
+                    lat_src = _latency_cache["wan"] if is_wan else _latency_cache["internal"]
 
                     calc.append({
                         **p,
@@ -289,8 +300,10 @@ async def get_network_metrics():
                         "tx_bps":    tx_bps,
                         "rx_errors": p.get("rx_errors", 0),
                         "tx_errors": p.get("tx_errors", 0),
+                        "latency":   lat_src["latency"],
+                        "jitter":    lat_src["jitter"],
                     })
-                result[dpid] = calc
+                result["switches"][dpid] = calc
 
             _last_metrics_state["time"] = now
             return result

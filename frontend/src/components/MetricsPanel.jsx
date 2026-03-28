@@ -48,13 +48,13 @@ const PortCard = ({ port }) => {
                                 <span className="text-[10px] text-gray-500">{port.rx_packets?.toLocaleString()} pkts</span>
                                 {port.rx_errors > 0 && <span className="text-[10px] text-red-400">{port.rx_errors} err</span>}
                             </div>
-                            {port.latency_ms !== undefined && (
+                            {port.latency !== undefined && (
                                 <div className="flex items-center justify-between mt-1 pt-1 border-t border-gray-800/20">
-                                    <span className={`text-[10px] font-bold ${port.latency_ms > 20 ? 'text-amber-400' : 'text-emerald-500/70'}`}>
-                                        {port.latency_ms}ms <span className="text-[8px] font-normal opacity-60">LAT</span>
+                                    <span className={`text-[10px] font-bold ${port.latency > 20 ? 'text-amber-400' : 'text-emerald-500/70'}`}>
+                                        {port.latency.toFixed(2)}ms <span className="text-[8px] font-normal opacity-60">LAT</span>
                                     </span>
                                     <span className="text-[10px] text-sky-400/70 font-bold">
-                                        {port.jitter_ms}ms <span className="text-[8px] font-normal opacity-60">JIT</span>
+                                        {port.jitter.toFixed(3)}ms <span className="text-[8px] font-normal opacity-60">JIT</span>
                                     </span>
                                 </div>
                             )}
@@ -75,7 +75,7 @@ const PortCard = ({ port }) => {
                                 <span className="text-[10px] text-gray-500">{port.tx_packets?.toLocaleString()} pkts</span>
                                 {port.tx_errors > 0 && <span className="text-[10px] text-red-400">{port.tx_errors} err</span>}
                             </div>
-                            {port.latency_ms !== undefined && (
+                            {port.latency !== undefined && (
                                 <div className="flex items-center justify-between mt-1 pt-1 border-t border-gray-800/20 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <span className="text-[9px] text-gray-500 uppercase tracking-tighter">Link Quality Active</span>
                                 </div>
@@ -100,11 +100,12 @@ export default function MetricsPanel({ metrics, nodes }) {
 
     // Filter only switch nodes that have telemetry data
     const switchNodes = nodes.filter(n => n.type === 'switch');
+    const switchData = metrics.switches || metrics; // fallback for safety
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-12">
             {switchNodes.map(node => {
-                const ports = metrics[node.dpid] || [];
+                const ports = switchData[node.dpid] || [];
                 return (
                     <div key={node.dpid} className="flex flex-col bg-gray-900/40 rounded-2xl border border-gray-800/60 overflow-hidden shadow-xl shadow-black/20">
                         <div className="px-5 py-3.5 bg-gray-800/80 border-b border-gray-700/50 flex items-center justify-between backdrop-blur-md">

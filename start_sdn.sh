@@ -48,8 +48,11 @@ echo "  → Killing stale tmux sessions (sdn_control, sdn_data)…"
 tmux kill-session -t sdn_control 2>/dev/null || true
 tmux kill-session -t sdn_data    2>/dev/null || true
 
-echo "  → Creating log directory…"
+echo "  → Creating log directory and clearing ALL stale logs…"
+sudo rm -rf /tmp/sdn_logs/*
 mkdir -p /tmp/sdn_logs
+sudo chmod 777 /tmp/sdn_logs
+export TZ_REMOTE=$(cat /etc/timezone)
 
 # ── Boot Control Plane (Ryu) ──────────────────────────────────────────────
 # Uses the research controller instead of the stock simple_switch_13.
@@ -57,7 +60,7 @@ mkdir -p /tmp/sdn_logs
 # rest_topology → /v1.0/topology/*  (switches, links, hosts)
 echo "  → Booting Control Plane (Ryu + research controller)…"
 tmux new-session -d -s sdn_control \
-  "bash -c 'source ~/ryu-env/bin/activate && \
+  "bash -c 'export TZ=$TZ_REMOTE && source ~/ryu-env/bin/activate && \
    ryu-manager \
      /home/test/sdn_controller.py \
      ryu.app.ofctl_rest \
@@ -70,8 +73,8 @@ sleep 6
 # ── Boot Data Plane (Mininet) ─────────────────────────────────────────────
 echo "  → Booting Data Plane (Mininet hybrid topology)…"
 tmux new-session -d -s sdn_data \
-  "echo test | sudo -S python3 /home/test/network_sim.py \
-   2>&1 | tee /tmp/sdn_logs/mininet.log"
+  "bash -c 'export TZ=$TZ_REMOTE && echo test | sudo -S python3 /home/test/network_sim.py \
+   2>&1 | tee /tmp/sdn_logs/mininet.log'"
 
 echo "  ✓ Remote SDN environment initialised"
 EOF

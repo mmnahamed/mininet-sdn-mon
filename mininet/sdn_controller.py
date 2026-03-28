@@ -247,7 +247,7 @@ class SdnResearchController(app_manager.RyuApp):
                 flows = self.flows_installed
                 rps   = len(self._req_timestamps) / 10.0
                 n_sw  = len(self.datapaths)
-            ts  = datetime.utcnow().isoformat()
+            ts = datetime.now().astimezone().isoformat()
             row = [ts, round(cpu, 2), round(mem, 2), flows, round(rps, 3), n_sw]
             with open(CTRL_CSV, "a", newline="") as f:
                 csv.writer(f).writerow(row)
@@ -259,7 +259,7 @@ class SdnResearchController(app_manager.RyuApp):
     # ── CSV writer ────────────────────────────────────────────────────────────
 
     def _log_flow_setup(self, dpid, in_port, src, dst, out_port, ms):
-        ts = datetime.utcnow().isoformat()
+        ts = datetime.now().astimezone().isoformat()
         with open(FLOW_CSV, "a", newline="") as f:
             csv.writer(f).writerow(
                 [ts, dpid, in_port, src, dst, out_port, round(ms, 4)]

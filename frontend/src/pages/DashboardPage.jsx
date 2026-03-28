@@ -217,7 +217,7 @@ const TABS = [
     { id: 'overview', label: 'Overview', icon: Activity },
     { id: 'flows', label: 'Flow Stats', icon: Zap },
     { id: 'controller', label: 'Controller', icon: Cpu },
-    { id: 'scenarios', label: 'Experiments', icon: BarChart2 },
+    // { id: 'scenarios', label: 'Experiments', icon: BarChart2 },
     { id: 'ports', label: 'Port Stats', icon: Database },
 ];
 
@@ -488,6 +488,7 @@ export default function DashboardPage({ metrics, nodes }) {
                 )}
 
                 {/* ── EXPERIMENTS tab ───────────────────────────────────── */}
+                {/* 
                 {tab === 'scenarios' && (
                     <div className="space-y-6">
                         <SectionHeader icon={Zap} title="Research Scenario Gallery" color="text-amber-400" />
@@ -538,6 +539,7 @@ export default function DashboardPage({ metrics, nodes }) {
                         </div>
                     </div>
                 )}
+                */}
 
                 {/* ── PORT STATS tab ────────────────────────────────────── */}
                 {tab === 'ports' && (

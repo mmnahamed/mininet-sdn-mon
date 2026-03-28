@@ -394,12 +394,11 @@ async def get_scenario_results():
             pass
     return out
 
-@app.post("/api/network/experiments/run")
-async def run_experiment(scenario: str = "all"):
-    """Trigger the research experiment runner on the remote Mininet host."""
-    cmd = f"echo test | sudo -S python3 /home/test/experiment_runner.py {scenario if scenario != 'all' else ''}"
-    success = await _ssh_run(cmd, bg=True)
-    return {"success": success, "scenario": scenario, "status": "Initiated"}
+# @app.post("/api/network/experiments/run")
+# async def run_experiment(request: Request):
+#     """Runs a specific research scenario on the remote Mininet host."""
+#     # Logic commented out to disable experimentation features
+#     return {"status": "disabled", "message": "Experimentation features are currently inactive."}
 
 
 # ── Latency (background ping logs) ───────────────────────────────────────────

@@ -3,6 +3,9 @@ RAM : 4GB
 CPU : 2 cores
 Storage : 20GB
 
+Net Adapter 1 : NAT
+Net Adapter 1 : HOST-ONLY 
+
 username : test
 password : test
 
